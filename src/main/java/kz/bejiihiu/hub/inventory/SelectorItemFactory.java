@@ -9,6 +9,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.components.CustomModelDataComponent;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -107,7 +108,9 @@ public record SelectorItemFactory(JavaPlugin plugin, SelectorConfig config, Plac
 		}
 
 		if (template.customModelData() >= 0) {
-			meta.setCustomModelData(template.customModelData());
+			CustomModelDataComponent customModelData = meta.getCustomModelDataComponent();
+			customModelData.setFloats(List.of((float) template.customModelData()));
+			meta.setCustomModelDataComponent(customModelData);
 		}
 
 		item.setItemMeta(meta);

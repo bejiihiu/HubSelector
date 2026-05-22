@@ -92,7 +92,7 @@ public record LobbyInventoryService(JavaPlugin plugin, SelectorConfig config, Cl
      * Extracts rendering state and filters offline services out.
      */
     private ServiceView toServiceView(ServiceInfoSnapshot service) {
-        if (!service.readProperty(BridgeDocProperties.IS_ONLINE)) {
+        if (!Boolean.TRUE.equals(service.readProperty(BridgeDocProperties.IS_ONLINE))) {
             return null;
         }
         boolean current = this.cloudNetFacade.currentServiceName().map(name -> name.equals(service.name())).orElse(false);

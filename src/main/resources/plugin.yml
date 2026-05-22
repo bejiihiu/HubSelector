@@ -1,7 +1,8 @@
 main: net.jandie1505.lobbyselector.LobbySelector
 name: HubSelector
-version: 2.0
-api-version: 1.13
+authors: [jandie1505, bejiihiu]
+version: 2.1.0
+api-version: 1.21
 permissions:
   lobbyselector.use:
     description: Allow usage of the lobby selector

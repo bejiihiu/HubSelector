@@ -15,12 +15,12 @@ It displays CloudNet lobby services in a clickable inventory menu and supports s
 - Better maintainability for future fork-only features.
 
 ## Requirements
-- Java 21
-- Paper API `1.21.4-R0.1-SNAPSHOT` (provided scope in `pom.xml`)
+- Java 25
+- Paper API `26.1.2.build.*` (resolved by Maven range in `pom.xml`)
 - CloudNet v4 modules:
-  - `bridge-api` `4.0.0-RC12`
-  - `wrapper-jvm-api` `4.0.0-RC12`
-  - `platform-inject-api` `4.0.0-RC12`
+  - `bridge-api` `4.0.0-RC16`
+  - `wrapper-jvm-api` `4.0.0-RC16`
+  - `platform-inject-api` `4.0.0-RC16`
 
 ## Installation
 Ready-to-use jar is available in [GitHub Releases](../../releases).
