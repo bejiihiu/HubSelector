@@ -23,6 +23,8 @@ It displays CloudNet lobby services in a clickable inventory menu and supports s
   - `platform-inject-api` `4.0.0-RC12`
 
 ## Installation
+Ready-to-use jar is available in [GitHub Releases](../../releases).
+
 1. Build the jar from this fork.
 2. Place it in your lobby template `plugins/` directory.
 3. Start one lobby instance to generate `config.json`.
