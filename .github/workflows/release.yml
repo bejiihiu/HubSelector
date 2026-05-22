@@ -2,14 +2,9 @@ name: Build and Publish Release Jar
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - master
   workflow_dispatch:
-    inputs:
-      tag_name:
-        description: 'Git tag for release (example: v2.1.0)'
-        required: true
-        type: string
 
 permissions:
   contents: write
@@ -67,11 +62,23 @@ jobs:
       - name: Resolve release tag
         id: tag
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "tag_name=${{ github.event.inputs.tag_name }}" >> "$GITHUB_OUTPUT"
-          else
+          if [ "${{ github.ref_type }}" = "tag" ]; then
             echo "tag_name=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          else
+            VERSION="$(grep -m1 '<version>' pom.xml | sed -E 's/.*<version>([^<]+)<\/version>.*/\1/' | sed 's/-SNAPSHOT$//')"
+            echo "tag_name=v${VERSION}+build.${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Create and push tag when needed
+        if: github.ref_type != 'tag'
+        env:
+          TAG_NAME: ${{ steps.tag.outputs.tag_name }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG_NAME"
+          git push origin "$TAG_NAME"
 
       - name: Build release body
         id: body
