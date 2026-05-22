@@ -2,33 +2,115 @@ name: Build and Publish Release Jar
 
 on:
   push:
-    branches:
-      - master
+    tags:
+      - 'v*'
   workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Git tag for release (example: v2.1.0)'
+        required: true
+        type: string
 
 permissions:
   contents: write
 
 jobs:
-  build-and-release:
+  build-matrix:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['21', '22', '23', '24', '25', '26']
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Java 26
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '26'
+          java-version: ${{ matrix.java }}
           cache: maven
 
       - name: Build with Maven
-        run: mvn -B clean package
+        run: mvn -B clean package -Djava.version=${{ matrix.java }} -Dmaven.compiler.release=${{ matrix.java }}
 
-      - name: Upload release asset
+      - name: Prepare release artifact
+        run: |
+          mkdir -p release-assets
+          cp target/*.jar release-assets/LobbySelector-java${{ matrix.java }}.jar
+
+      - name: Upload matrix artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-java${{ matrix.java }}
+          path: release-assets/*.jar
+
+  publish-release:
+    runs-on: ubuntu-latest
+    needs: build-matrix
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-java*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Resolve release tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag_name=${{ github.event.inputs.tag_name }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag_name=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build release body
+        id: body
+        run: |
+          set -euo pipefail
+          git fetch --tags --force
+          CURRENT_TAG="${{ steps.tag.outputs.tag_name }}"
+          PREV_TAG="$(git tag --sort=-creatordate | grep -Fxv "$CURRENT_TAG" | head -n 1 || true)"
+          BODY_FILE="release-body.md"
+
+          {
+            echo "## Build Matrix"
+            echo "Artifacts are attached for Java versions: 21, 22, 23, 24, 25, 26."
+            echo
+            echo "## Compatibility"
+            echo "- PaperMC docs currently recommend Java 21 for Paper 1.20-1.21.x."
+            echo "- Java 21 build should be treated as the baseline for production servers."
+            echo "- Newer Java artifacts are provided for infrastructures that standardize on newer JVMs."
+            echo
+            echo "## Commit References"
+            if [ -n "$PREV_TAG" ]; then
+              echo "Changes since \`$PREV_TAG\`:"
+              git log --no-merges --pretty=format:"- [%h](https://github.com/${{ github.repository }}/commit/%H) %s" "$PREV_TAG..HEAD" || true
+            else
+              echo "No previous tag found, listing recent commits:"
+              git log --no-merges -n 20 --pretty=format:"- [%h](https://github.com/${{ github.repository }}/commit/%H) %s" || true
+            fi
+            echo
+            echo
+            echo "If this release saved your day, feel free to heroically subscribe to Telegram: @devfolia."
+          } > "$BODY_FILE"
+
+          echo "path=$BODY_FILE" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          files: target/*.jar
+          tag_name: ${{ steps.tag.outputs.tag_name }}
+          files: release-assets/*.jar
           generate_release_notes: true
+          append_body: true
+          body_path: ${{ steps.body.outputs.path }}
