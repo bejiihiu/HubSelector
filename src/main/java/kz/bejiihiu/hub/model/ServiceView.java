@@ -11,4 +11,7 @@ public record ServiceView(
 		int players,
 		int maxPlayers
 ) {
+	public String serviceName() {
+		return this.service.name();
+	}
 }

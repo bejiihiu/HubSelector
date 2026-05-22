@@ -1,0 +1,12 @@
+package kz.bejiihiu.hub.telemetry;
+
+public enum ConnectFailureReason {
+	SERVICE_OFFLINE,
+	SERVICE_FULL,
+	INVALID_TARGET,
+	ALREADY_CURRENT,
+	PLAYER_UNAVAILABLE,
+	BRIDGE_ERROR,
+	NO_ALTERNATIVE,
+	UNKNOWN
+}

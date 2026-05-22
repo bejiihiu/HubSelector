@@ -19,10 +19,12 @@ import kz.bejiihiu.hub.model.ServiceView;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
+import java.util.function.Supplier;
+
 /**
  * Renders Bukkit item stacks from service state and item templates.
  */
-public record SelectorItemFactory(JavaPlugin plugin, SelectorConfig config, PlaceholderService placeholderService,
+public record SelectorItemFactory(JavaPlugin plugin, Supplier<SelectorConfig> configSupplier, PlaceholderService placeholderService,
 		NamespacedKey serviceKey) {
 	private static final LegacyComponentSerializer LEGACY_SERIALIZER = LegacyComponentSerializer.legacyAmpersand();
 
@@ -50,16 +52,17 @@ public record SelectorItemFactory(JavaPlugin plugin, SelectorConfig config, Plac
 	 * Picks configured template variant by current/full/silent/default priority.
 	 */
 	private ItemTemplate selectTemplate(ServiceView serviceView, boolean isSilentHub) {
+		SelectorConfig config = this.configSupplier.get();
 		if (serviceView.currentService()) {
-			return this.config.currentItem();
+			return config.currentItem();
 		}
 		if (serviceView.players() >= serviceView.maxPlayers()) {
-			return this.config.fullItem();
+			return config.fullItem();
 		}
 		if (isSilentHub) {
-			return this.config.silentHubItem();
+			return config.silentHubItem();
 		}
-		return this.config.defaultItem();
+		return config.defaultItem();
 	}
 
 	/**

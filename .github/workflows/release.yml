@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: ['24', '25', '26']
+        java: ["24", "25", "26"]
 
     steps:
       - name: Checkout
@@ -107,7 +107,7 @@ jobs:
             fi
             echo
             echo
-            echo "If this release saved your day, feel free to heroically subscribe to Telegram: @devfolia."
+            echo "If this release saved your day, feel free to heroically subscribe to Telegram: https://t.me/devfolia."
           } > "$BODY_FILE"
 
           echo "path=$BODY_FILE" >> "$GITHUB_OUTPUT"

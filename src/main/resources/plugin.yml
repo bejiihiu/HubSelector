@@ -8,10 +8,23 @@ permissions:
     description: Allow usage of the lobby selector
   lobbyselector.silentlobby:
     description: Allow silent lobby
+  lobbyselector.admin.reload:
+    description: Allow runtime config reload
+    default: op
+  lobbyselector.admin.debug:
+    description: Allow debug mode toggle
+    default: op
+  lobbyselector.admin.stats:
+    description: Allow telemetry stats view
+    default: op
+  lobbyselector.admin.open:
+    description: Allow opening selector for other players
+    default: op
 commands:
   lobbyselector:
     description: Open the lobby selector
-    usage: /hub
-    permission: hub.use
+    usage: /lobbyselector
+    permission: lobbyselector.use
+    aliases: [hub]
 website: github.com/jandie1505
 depend: [CloudNet-Bridge]

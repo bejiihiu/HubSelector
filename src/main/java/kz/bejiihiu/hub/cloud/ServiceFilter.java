@@ -3,21 +3,24 @@ package kz.bejiihiu.hub.cloud;
 import eu.cloudnetservice.driver.service.ServiceInfoSnapshot;
 import kz.bejiihiu.hub.config.SelectorConfig;
 
+import java.util.function.Supplier;
+
 /**
  * Classifies services against lobby task rules from configuration.
  */
 public class ServiceFilter {
-	private final SelectorConfig config;
+	private final Supplier<SelectorConfig> configSupplier;
 
-	public ServiceFilter(SelectorConfig config) {
-		this.config = config;
+	public ServiceFilter(Supplier<SelectorConfig> configSupplier) {
+		this.configSupplier = configSupplier;
 	}
 
 	/**
 	 * Accepts a service if it belongs to lobby task or, when allowed, silent lobby task.
 	 */
 	public boolean isValidLobbyService(ServiceInfoSnapshot service, boolean enableSilentHub) {
-		if (service.serviceId().taskName().equals(this.config.lobbyTask())) {
+		SelectorConfig config = this.configSupplier.get();
+		if (service.serviceId().taskName().equals(config.lobbyTask())) {
 			return true;
 		}
 		return enableSilentHub && this.isSilentHubService(service);
@@ -27,6 +30,7 @@ public class ServiceFilter {
 	 * Checks whether a service belongs to configured silent lobby task.
 	 */
 	public boolean isSilentHubService(ServiceInfoSnapshot service) {
-		return this.config.enableSilentLobby() && service.serviceId().taskName().equals(this.config.silentLobbyTask());
+		SelectorConfig config = this.configSupplier.get();
+		return config.enableSilentLobby() && service.serviceId().taskName().equals(config.silentLobbyTask());
 	}
 }

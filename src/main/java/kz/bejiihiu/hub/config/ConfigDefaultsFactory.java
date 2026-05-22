@@ -30,7 +30,40 @@ public final class ConfigDefaultsFactory {
 		serverItemConfig.put("current", createItem(Material.EMERALD.name(), "&a{service} (current) ({players}/{max_players})", true));
 
 		config.put(SelectorConfig.KEY_SERVER_ITEMS, serverItemConfig);
+		config.put(SelectorConfig.KEY_FEATURES, createFeatures());
+		config.put(SelectorConfig.KEY_SELECTION_POLICY, createSelectionPolicy());
+		config.put(SelectorConfig.KEY_MESSAGES, createMessages());
 		return config;
+	}
+
+	private static JSONObject createFeatures() {
+		JSONObject features = new JSONObject();
+		features.put("pagination", true);
+		features.put("smartJoin", true);
+		features.put("retryConnect", true);
+		features.put("fallbackConnect", true);
+		features.put("telemetry", true);
+		features.put("debug", false);
+		return features;
+	}
+
+	private static JSONObject createSelectionPolicy() {
+		JSONObject selectionPolicy = new JSONObject();
+		selectionPolicy.put("mode", "manual");
+		selectionPolicy.put("strategy", "leastPlayers");
+		return selectionPolicy;
+	}
+
+	private static JSONObject createMessages() {
+		JSONObject messages = new JSONObject();
+		messages.put("connecting", "&aConnecting to {service}...");
+		messages.put("alreadyConnecting", "&eConnection already in progress");
+		messages.put("serviceFull", "&cService is full");
+		messages.put("serviceOffline", "&cService is offline");
+		messages.put("retry", "&eRetrying connection...");
+		messages.put("fallback", "&eSelected lobby unavailable. Trying {service}");
+		messages.put("failed", "&cConnection failed. Try again");
+		return messages;
 	}
 
 	/**
