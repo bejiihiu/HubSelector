@@ -10,7 +10,7 @@ permissions:
 commands:
   lobbyselector:
     description: Open the lobby selector
-    usage: /lobbyselector
-    permission: lobbyselector.use
+    usage: /hub
+    permission: hub.use
 website: github.com/jandie1505
 depend: [CloudNet-Bridge]

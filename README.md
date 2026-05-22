@@ -1,62 +1,85 @@
-# LobbySelector
-Displays CloudNet lobby services inside an inventory menu. Also supports silent lobbies.
+# HubSelector (Fork of LobbySelector)
+
+HubSelector is an improved fork of the original `net.jandie1505` LobbySelector plugin.  
+It displays CloudNet lobby services in a clickable inventory menu and supports silent lobby routing.
+
+## Fork Notice
+- This repository is a fork and keeps compatibility entrypoints where needed.
+- Fork-specific architecture and extensions live under `kz.bejiihiu.hub.*`.
+- The plugin keeps the same core user-facing behavior: open GUI, pick service, connect through CloudNet Bridge.
+
+## What's Improved
+- Monolith split into focused modules (bootstrap/config/cloud/inventory/command/listener/model).
+- Typed config boundary (`SelectorConfig`) instead of runtime-wide raw JSON access.
+- Explicit CloudNet facade with null-safe dependency access and connection flow.
+- Better maintainability for future fork-only features.
 
 ## Requirements
-- CloudNet v4 (v3 is not supported, tested with v4.0.0-RC9)
-- A lobby task
-- A lobby plugin which supports custom items that run commands when they are clicked (only if you want to open the lobby selector with an item)
+- Java 21
+- Paper API `1.21.4-R0.1-SNAPSHOT` (provided scope in `pom.xml`)
+- CloudNet v4 modules:
+  - `bridge-api` `4.0.0-RC12`
+  - `wrapper-jvm-api` `4.0.0-RC12`
+  - `platform-inject-api` `4.0.0-RC12`
 
 ## Installation
-1. Download the plugin from the releases page
-2. Put the plugin jar into the plugins folder of your lobby template
-3. Restart a lobby service and copy the configuration from that service to your lobby template
-4. Make your configuration changes
-5. Restart all lobby services to apply the lobby selector to all services
+1. Build the jar from this fork.
+2. Place it in your lobby template `plugins/` directory.
+3. Start one lobby instance to generate `config.json`.
+4. Tune config values.
+5. Roll out to all lobby instances.
 
-## Commands
-With the command `/lobbyselector`, the lobby selector menu can be opened.  There are no more commands.
-
-## Permissions
-| Permission | Description |
+## Commands and Permissions
+| Item | Value |
 |--|--|
-| `lobbyselector.use` | Allows the usage of the command `/lobbyselector`. |
-| `lobbyselector.silentlobby` | Allows to see silent lobbies in the lobby selector menu. |
+| Command | `/lobbyselector` |
+| Permission (use) | `lobbyselector.use` |
+| Permission (silent lobbies) | `lobbyselector.silentlobby` |
 
 ## Configuration
-| Value | Description |
-|--|--|
-| `lobbyTask`         | The lobby task name.                                                                                                                                                                                                                   |
-| `inventoryTitle`    | The name of the lobby selector menu/inventory.                                                                                                                                                                                         |
-| `hideFullServices`  | When enabled, full services will be hidden from the lobby selector menu.                                                                                                                                                               |
-| `enableSilentLobby` | When enabled, services from the task `silentLobbyTask` will also be displayed in the lobby selector menu.                                                                                                                              |
-| `silentLobbyTask`   | The silent lobby task name. Services will only be shown when `enableSilentLobby` is set to `true`.                                                                                                                                     |
-| `serverItems`       | A JSONObject with the following keys: `default` (Default Item), `full` (Full service), `silentHub` (SilentHub Service) and `current` (Current Service). The value for all of them is a JSONObject described in the ServerItem section. |
+Top-level keys:
 
-### ServerItem
-| Value | Description |
+| Key | Description |
 |--|--|
-| `material`        | The material of the service displayed in the lobby selector menu.                                                     |
-| `name`            | The name of the service displayed in the lobby selector menu. Can contain placeholders from the placeholders section. |
-| `lore`            | The item lore as a JSON Array of Strings (1 element = 1 line).                                                        |
-| `enchanted`       | When set to true, the item has the enchantment glint effect.                                                          |
-| `customModelData` | The custom model data of the item. Set to a negative value to disable.                                                |
+| `lobbyTask` | Main lobby task name. |
+| `inventoryTitle` | Inventory GUI title (legacy color codes supported). |
+| `hideFullServices` | Hides non-current services when player count is at max. |
+| `enableSilentLobby` | Enables integration of services from `silentLobbyTask`. |
+| `silentLobbyTask` | Task name for silent lobbies. |
+| `serverItems` | Item templates for `default`, `full`, `silentHub`, `current`. |
 
-### Placeholders
-The following placeholders can be used in the config options `name`, `nameFull` and `nameCurrent`:
+`serverItems.<variant>` fields:
+
+| Key | Description |
+|--|--|
+| `material` | Bukkit material name. |
+| `name` | Display name with placeholders. |
+| `lore` | String array (one entry per line). |
+| `enchanted` | Adds enchantment glint when `true`. |
+| `customModelData` | Non-negative value enables custom model data. |
+
+Supported placeholders:
+
 | Placeholder | Description |
 |--|--|
-| `{service}` | The name of that service. |
-| `{players}` | The player count of that service. |
-| `{max_players}` | The maximum player count of that service. |
+| `{service}` | Service name. |
+| `{players}` | Current players. |
+| `{max_players}` | Maximum players. |
 
-## Setup for lobby plugins
-Your lobby plugin needs to support custom items that run commands if they are clicked.  
-The two most used lobby plugins (DeluxeHub and SuperLobbyDeluxe) do support this.  
-Then you need to simply run the command `/lobbyselector` as the player who clicked the item.
+## Architecture Overview
+Internal modules are split by responsibility:
+- `bootstrap`: wiring, registration, startup lifecycle.
+- `config`: defaults + load + typed projection.
+- `cloud`: CloudNet lookup and connect abstraction.
+- `inventory`: GUI build, item rendering, click/drag handling.
+- `command`: permission checks and inventory open action.
+- `listener`: event glue around inventory interactions.
+- `model`: compact records shared between layers.
 
-## Known Issue: Nothing happens when clicking on server items
-It can happen that if you click on a server item nothing will happen.
-There is a CloudNet bug which causes this. Check if you are shown in /cloud players online (or players online in cloudnet console).
-If this is not the case, the plugin can't move you because it uses the CloudNet API for that.
-This CloudNet Bug is triggered when you use RC9 with a server version higher than 1.20.1 (also with ViaVersion).
-You can read more about that bug [here](https://github.com/CloudNetService/CloudNet-v3/issues/1310).
+See detailed docs in:
+- `docs/architecture.md`
+- `docs/migration-from-upstream.md`
+
+## Known Limitation
+If players are not visible to CloudNet player management, clicking a service item may not connect the player.  
+This plugin uses CloudNet Bridge APIs for transfer, so upstream CloudNet visibility issues directly affect routing.
